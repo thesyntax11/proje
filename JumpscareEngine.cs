@@ -6,6 +6,7 @@ using System.Media;
 using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Timer = System.Windows.Forms.Timer;
 
 namespace ChaosVisualAudioSimulation
 {
