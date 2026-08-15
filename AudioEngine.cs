@@ -1,18 +1,18 @@
 using System;
+using System.Media;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Media;
 
 namespace ChaosVisualAudioSimulation
 {
     /// <summary>
-    /// SES MOTORU
+    /// SES MOTORU — yoğunlaştırılmış sürüm.
     /// İki katmanlı işitsel kaos üretir:
     ///   1) Windows sistem sesleri (SystemSounds.*) — giderek hızlanan tempo
-    ///   2) Anakart beep sesleri (Console.Beep) — rastgele frekanslı kaotik bip
+    ///   2) Anakart beep sesleri (Console.Beep) — kaotik frekans ve hızlı
+    ///      "dıt-dıt-dıtttt" ritim patlamaları.
     ///
-    /// GÜVENLİK NOTU: Ses üretimi tamamen yereldir. Hiçbir ses/dosya/veri
-    /// okunmaz, yazılmaz veya ağa gönderilmez.
+    /// GÜVENLİK: Tamamen yereldir; hiçbir dosya/ağ/registry erişimi yoktur.
     /// </summary>
     internal sealed class AudioEngine : IDisposable
     {
@@ -20,9 +20,9 @@ namespace ChaosVisualAudioSimulation
         private Task? _loopTask;
         private readonly Random _rnd = new Random();
 
-        // Tempo, 320ms'den 40ms'ye kadar hızlanır.
-        private const int MinIntervalMs = 40;
-        private const int MaxIntervalMs = 320;
+        // Tempo, 240ms'den 25ms'ye kadar hızlanır.
+        private const int MinIntervalMs = 25;
+        private const int MaxIntervalMs = 240;
 
         public void Start()
         {
@@ -44,7 +44,6 @@ namespace ChaosVisualAudioSimulation
 
         private void Loop(CancellationToken token)
         {
-            // Tempo giderek artar.
             double intensity = 0.0;
             while (!token.IsCancellationRequested)
             {
@@ -56,9 +55,16 @@ namespace ChaosVisualAudioSimulation
                     if (token.WaitHandle.WaitOne(interval)) break;
 
                     PlayRandomSystemSound();
-                    if (_rnd.Next(0, 3) == 0)
+
+                    // Beep sıklığını artır: çoğu dilimde "dıtttt" gelsin.
+                    if (_rnd.Next(0, 2) == 0)
                     {
                         PlayRandomBeep();
+                    }
+                    // Ara sıra hızlı bip patlaması (dıt-dıt-dıtttt).
+                    if (_rnd.Next(0, 5) == 0)
+                    {
+                        PlayBeepBurst();
                     }
                 }
                 catch (OperationCanceledException)
@@ -88,9 +94,31 @@ namespace ChaosVisualAudioSimulation
         // ------------------------------------------------------------------
         private void PlayRandomBeep()
         {
-            int frequency = _rnd.Next(200, 3000);
-            int duration = _rnd.Next(30, 220);
+            int frequency = _rnd.Next(150, 3500);
+            int duration = _rnd.Next(20, 200);
             Console.Beep(frequency, duration);
+        }
+
+        // ------------------------------------------------------------------
+        // Hızlı bip patlaması: "dıt-dıt-dıtttt"
+        // ------------------------------------------------------------------
+        private void PlayBeepBurst()
+        {
+            try
+            {
+                int count = _rnd.Next(3, 9);
+                int baseFreq = _rnd.Next(400, 1800);
+                for (int i = 0; i < count; i++)
+                {
+                    int freq = baseFreq + _rnd.Next(-200, 400);
+                    int dur = _rnd.Next(15, 70);
+                    Console.Beep(freq, dur);
+                }
+            }
+            catch
+            {
+                // beep cihazı yoksa sessizce geç
+            }
         }
 
         public void Dispose() => Stop();

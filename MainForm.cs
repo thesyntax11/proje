@@ -18,9 +18,10 @@ namespace ChaosVisualAudioSimulation
     {
         private const int HotKeyId = 0xC0DE;
 
-        private readonly VisualEngine _visual = new VisualEngine(intervalMs: 50);
+        private readonly VisualEngine _visual = new VisualEngine(AppConfig.VisualIntervalMs);
         private readonly AudioEngine _audio = new AudioEngine();
         private readonly JumpscareEngine _jumpscare = new JumpscareEngine(intervalMs: 30);
+        private readonly PopupEngine _popups = new PopupEngine(AppConfig.PopupIntervalMs);
         private readonly Timer _startupTimer;
         private bool _shuttingDown;
 
@@ -94,6 +95,10 @@ namespace ChaosVisualAudioSimulation
             {
                 _jumpscare.Start();
             }
+            if (AppConfig.PopupsEnabled)
+            {
+                _popups.Start();
+            }
         }
 
         /// <summary>
@@ -145,6 +150,7 @@ namespace ChaosVisualAudioSimulation
                 _audio.Stop();
                 _visual.Stop();
                 _jumpscare.Stop();
+                _popups.Stop();
 
                 // Ekranı anında ilk haline döndür.
                 _visual.RestoreScreen();
@@ -166,6 +172,7 @@ namespace ChaosVisualAudioSimulation
                 _visual.Dispose();
                 _audio.Dispose();
                 _jumpscare.Dispose();
+                _popups.Dispose();
                 _startupTimer.Dispose();
             }
             base.Dispose(disposing);

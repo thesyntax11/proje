@@ -48,5 +48,21 @@ namespace ChaosVisualAudioSimulation
 
         /// <summary>İki jumpscare arasındaki maksimum boşluk (saniye).</summary>
         public const int ScareMaxGapSeconds = 42;
+
+        // ------------------------------------------------------------------
+        // Kaos yoğunluğu / popup ayarları
+        // ------------------------------------------------------------------
+
+        /// <summary>Görsel motorun tick aralığı (ms). Düşük = daha yoğun kaos.</summary>
+        public const int VisualIntervalMs = 30;
+
+        /// <summary>Ekranı dolduran sahte uyarı pencereleri aktif mi?</summary>
+        public const bool PopupsEnabled = true;
+
+        /// <summary>Uyarı pencereleri açılma aralığı (ms).</summary>
+        public const int PopupIntervalMs = 2200;
+
+        /// <summary>Ekranda aynı anda bulunabilecek maksimum uyarı penceresi.</summary>
+        public const int MaxPopups = 12;
     }
 }

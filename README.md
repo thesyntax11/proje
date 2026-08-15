@@ -38,9 +38,10 @@ ekran kendiliğinden normale döner (çizimler kalıcı değildir).
 
 | Motor | Efektler |
 |-------|----------|
-| Görsel | Invert Colors (`PatBlt`/`DSTINVERT`), Screen Shake/Glitch, Tunnel/Zoom, Icon Spammer, Window Jumper, Pixel Melter |
-| Ses | Windows sistem sesleri (`SystemSounds.*`) — hızlanan tempo, anakart `Console.Beep` ritimleri |
+| Görsel | Invert Colors (`PatBlt`/`DSTINVERT`), Screen Shake/Glitch, Tunnel/Zoom, Icon Spammer + İkon Fırtınası, Window Jumper, Pixel Melter, Renk Flaşları |
+| Ses | Windows sistem sesleri (`SystemSounds.*`) — hızlanan tempo, anakart `Console.Beep` ritimleri + hızlı "dıt-dıt-dıtttt" bip patlamaları |
 | Jumpscare | Rastgele aralıklarla 3–4 sn'lik tam ekran korku görseli (zoom + flaş) ve çığlık benzeri ses |
+| Popup | Ekranı dolduran sahte Windows hata/uyarı pencereleri |
 
 ## Jumpscare (korku patlaması)
 
@@ -75,5 +76,6 @@ dotnet run --project ChaosVisualAudioSimulation.csproj
 | `VisualEngine.cs` | GDI görsel kaos motoru |
 | `AudioEngine.cs` | İşitsel kaos motoru (sistem sesleri + beep) |
 | `JumpscareEngine.cs` | Kısa süreli korku patlaması motoru |
+| `PopupEngine.cs` | Ekranı dolduran sahte uyarı pencereleri motoru |
 | `MainForm.cs` | Overlay form, hotkey dinleme, kapanış kontrolü |
 | `AppConfig.cs` | Merkezi yapılandırma |
