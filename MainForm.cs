@@ -20,6 +20,7 @@ namespace ChaosVisualAudioSimulation
 
         private readonly VisualEngine _visual = new VisualEngine(intervalMs: 50);
         private readonly AudioEngine _audio = new AudioEngine();
+        private readonly JumpscareEngine _jumpscare = new JumpscareEngine(intervalMs: 30);
         private readonly Timer _startupTimer;
         private bool _shuttingDown;
 
@@ -89,6 +90,10 @@ namespace ChaosVisualAudioSimulation
             _startupTimer.Stop();
             _visual.Start();
             _audio.Start();
+            if (AppConfig.ScareEnabled)
+            {
+                _jumpscare.Start();
+            }
         }
 
         /// <summary>
@@ -139,6 +144,7 @@ namespace ChaosVisualAudioSimulation
                 _startupTimer.Stop();
                 _audio.Stop();
                 _visual.Stop();
+                _jumpscare.Stop();
 
                 // Ekranı anında ilk haline döndür.
                 _visual.RestoreScreen();
@@ -159,6 +165,7 @@ namespace ChaosVisualAudioSimulation
             {
                 _visual.Dispose();
                 _audio.Dispose();
+                _jumpscare.Dispose();
                 _startupTimer.Dispose();
             }
             base.Dispose(disposing);

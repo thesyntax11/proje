@@ -1,5 +1,14 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
+  <!-- Jumpscare korku görseli (opsiyonel). scare.png / scare.jpg dosyasını
+       proje köküne koyun; otomatik gömülür ve JumpscareEngine yükler.
+       Görsel yoksa kırmızı/siyah glitch fallback çalışır. -->
+  <ItemGroup>
+    <EmbeddedResource Include="scare.png" Condition="Exists('scare.png')" />
+    <EmbeddedResource Include="scare.jpg" Condition="Exists('scare.jpg')" />
+    <EmbeddedResource Include="scare.jpeg" Condition="Exists('scare.jpeg')" />
+  </ItemGroup>
+
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net8.0-windows</TargetFramework>

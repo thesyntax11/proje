@@ -26,5 +26,27 @@ namespace ChaosVisualAudioSimulation
         /// Operatöre hazırlanması için kısa bir süre tanır.
         /// </summary>
         public const int StartupDelaySeconds = 3;
+
+        // ------------------------------------------------------------------
+        // Jumpscare (korku patlaması) ayarları
+        // ------------------------------------------------------------------
+
+        /// <summary>Jumpscare aktif mi?</summary>
+        public const bool ScareEnabled = true;
+
+        /// <summary>Jumpscare anında çığlık benzeri ses çalınsın mı?</summary>
+        public const bool ScareScream = true;
+
+        /// <summary>Jumpscare süresi (ms) — 3500 = ~3.5 saniye.</summary>
+        public const int ScareDurationMs = 3500;
+
+        /// <summary>İlk jumpscare'in gecikmesi (saniye).</summary>
+        public const int ScareFirstDelaySeconds = 12;
+
+        /// <summary>İki jumpscare arasındaki minimum boşluk (saniye).</summary>
+        public const int ScareMinGapSeconds = 18;
+
+        /// <summary>İki jumpscare arasındaki maksimum boşluk (saniye).</summary>
+        public const int ScareMaxGapSeconds = 42;
     }
 }

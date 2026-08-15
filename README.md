@@ -40,6 +40,20 @@ ekran kendiliğinden normale döner (çizimler kalıcı değildir).
 |-------|----------|
 | Görsel | Invert Colors (`PatBlt`/`DSTINVERT`), Screen Shake/Glitch, Tunnel/Zoom, Icon Spammer, Window Jumper, Pixel Melter |
 | Ses | Windows sistem sesleri (`SystemSounds.*`) — hızlanan tempo, anakart `Console.Beep` ritimleri |
+| Jumpscare | Rastgele aralıklarla 3–4 sn'lik tam ekran korku görseli (zoom + flaş) ve çığlık benzeri ses |
+
+## Jumpscare (korku patlaması)
+
+Kaos **kesintisiz** devam ederken, rastgele aralıklarla (~18–42 sn) yalnızca
+**3–4 saniyelik** bir korku patlaması üzerine biner: tam ekran korku görseli
+içe doğru zoom yaparak, titreme/flaş ve yükselen beep + sistem sesleriyle
+görünür. **7/24 kalmaz**, Matrix yağmuru gibi sürekli bir katman değildir.
+
+- Korku görseli: proje köküne **`scare.png`** (veya `scare.jpg`) koyun;
+  derlemede otomatik gömülür ve yüklenir.
+- Görsel yoksa kırmızı/siyah glitch fallback'i çalışır.
+- Tüm jumpscare ayarları `AppConfig.cs` içinde (`ScareEnabled`,
+  `ScareDurationMs`, boşluk aralıkları, `ScareScream`) değiştirilebilir.
 
 ## Derleme ve Çalıştırma
 
@@ -60,5 +74,6 @@ dotnet run --project ChaosVisualAudioSimulation.csproj
 | `NativeMethods.cs` | Tüm Win32 P/Invoke tanımları (`user32.dll` / `gdi32.dll`) |
 | `VisualEngine.cs` | GDI görsel kaos motoru |
 | `AudioEngine.cs` | İşitsel kaos motoru (sistem sesleri + beep) |
+| `JumpscareEngine.cs` | Kısa süreli korku patlaması motoru |
 | `MainForm.cs` | Overlay form, hotkey dinleme, kapanış kontrolü |
 | `AppConfig.cs` | Merkezi yapılandırma |
