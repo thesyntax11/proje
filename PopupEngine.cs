@@ -69,16 +69,20 @@ namespace ChaosVisualAudioSimulation
 
         private void OnTick(object? sender, EventArgs e)
         {
-            // Aktif pencere sınırını aşma; ekranı doldur ama sistemi boğma.
-            if (Volatile.Read(ref _active) >= AppConfig.MaxPopups) return;
-
-            Interlocked.Increment(ref _active);
-            var t = new Thread(ShowPopup)
+            // Hatalar fışkırsın: her tick'te 1-3 pencere birden (sınırı koruyarak).
+            int burst = _rnd.Next(1, 4);
+            for (int i = 0; i < burst; i++)
             {
-                IsBackground = true,
-                Name = "ChaosPopup"
-            };
-            t.Start();
+                if (Volatile.Read(ref _active) >= AppConfig.MaxPopups) return;
+
+                Interlocked.Increment(ref _active);
+                var t = new Thread(ShowPopup)
+                {
+                    IsBackground = true,
+                    Name = "ChaosPopup"
+                };
+                t.Start();
+            }
         }
 
         private void ShowPopup()

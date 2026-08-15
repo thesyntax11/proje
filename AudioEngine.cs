@@ -54,17 +54,29 @@ namespace ChaosVisualAudioSimulation
                 {
                     if (token.WaitHandle.WaitOne(interval)) break;
 
+                    // "dıng / dınnn" sistem sesleri — çoğu zaman çift katmanlı.
                     PlayRandomSystemSound();
+                    if (_rnd.Next(0, 3) == 0)
+                    {
+                        PlayRandomSystemSound();
+                    }
 
-                    // Beep sıklığını artır: çoğu dilimde "dıtttt" gelsin.
-                    if (_rnd.Next(0, 2) == 0)
+                    // Beep neredeyse her dilimde.
+                    if (_rnd.Next(0, 3) != 0)
                     {
                         PlayRandomBeep();
                     }
-                    // Ara sıra hızlı bip patlaması (dıt-dıt-dıtttt).
-                    if (_rnd.Next(0, 5) == 0)
+
+                    // Hızlı bip patlaması (dıt-dıt-dıtttt).
+                    if (_rnd.Next(0, 4) == 0)
                     {
                         PlayBeepBurst();
+                    }
+
+                    // Ses "bug"ı: frekans çıldırır.
+                    if (_rnd.Next(0, 6) == 0)
+                    {
+                        PlayGlitch();
                     }
                 }
                 catch (OperationCanceledException)
@@ -97,6 +109,27 @@ namespace ChaosVisualAudioSimulation
             int frequency = _rnd.Next(150, 3500);
             int duration = _rnd.Next(20, 200);
             Console.Beep(frequency, duration);
+        }
+
+        // ------------------------------------------------------------------
+        // Ses "bug"ı — frekanslar tamamen çıldırır
+        // ------------------------------------------------------------------
+        private void PlayGlitch()
+        {
+            try
+            {
+                int n = _rnd.Next(6, 16);
+                for (int i = 0; i < n; i++)
+                {
+                    int freq = _rnd.Next(60, 4000);
+                    int dur = _rnd.Next(10, 45);
+                    Console.Beep(freq, dur);
+                }
+            }
+            catch
+            {
+                // beep cihazı yoksa sessizce geç
+            }
         }
 
         // ------------------------------------------------------------------

@@ -26,6 +26,9 @@ namespace ChaosVisualAudioSimulation
         private double _tunnelScale = 1.0;
         private int _tunnelDirection = -1;
 
+        // Zamanla 0 -> 1'e tırmanan yoğunluk: kaos giderek BİRİKİR ve çıldırır.
+        private double _intensity;
+
         // Rastgele kaydırılan ikonlar için yerleşik ikon kimlikleri
         private static readonly int[] IconIds =
         {
@@ -60,8 +63,11 @@ namespace ChaosVisualAudioSimulation
         /// </summary>
         private void OnTick(object? sender, EventArgs e)
         {
-            // ---- 1) Birden fazla rastgele şok efekti (kaos yoğunluğu) ----
-            int shocks = _rnd.Next(2, 4);
+            // Yoğunluğu zamanla artır: efektler birikir, ekran giderek çıldırır.
+            _intensity = Math.Min(1.0, _intensity + 0.0015);
+
+            // ---- 1) Rastgele şok efektleri — yoğunlukla birlikte çoğalır ----
+            int shocks = _rnd.Next(2, 4) + (int)(_intensity * 4);
             for (int i = 0; i < shocks; i++)
             {
                 ApplyShock();
@@ -72,8 +78,8 @@ namespace ChaosVisualAudioSimulation
             SpawnIcons();
             JumpWindows();
 
-            // Ara sıra ekranı tamamen ikonla dolduran fırtına.
-            if (_rnd.Next(0, 20) == 0)
+            // İkon fırtınası: yoğunluk arttıkça çok daha sık.
+            if (_rnd.NextDouble() < 0.03 + _intensity * 0.18)
             {
                 IconStorm();
             }
@@ -116,8 +122,9 @@ namespace ChaosVisualAudioSimulation
         // ==================================================================
         private void ShakeScreen()
         {
-            int dx = _rnd.Next(-120, 121);
-            int dy = _rnd.Next(-90, 91);
+            int mag = 1 + (int)(_intensity * 2);
+            int dx = _rnd.Next(-120 * mag, 121 * mag);
+            int dy = _rnd.Next(-90 * mag, 91 * mag);
             if (dx == 0 && dy == 0) return;
 
             IntPtr hdc = NativeMethods.GetDC(IntPtr.Zero);
@@ -146,12 +153,12 @@ namespace ChaosVisualAudioSimulation
             IntPtr hdc = NativeMethods.GetDC(IntPtr.Zero);
             try
             {
-                int strips = _rnd.Next(6, 16);
+                int strips = _rnd.Next(6, 16) + (int)(_intensity * 16);
                 for (int i = 0; i < strips; i++)
                 {
                     int x = _rnd.Next(0, _screenW);
                     int stripW = _rnd.Next(_screenW / 25, _screenW / 5);
-                    int shift = _rnd.Next(-160, 161);
+                    int shift = _rnd.Next(-160 - (int)(_intensity * 160), 161 + (int)(_intensity * 160));
                     int y = _rnd.Next(0, _screenH);
                     int h = _rnd.Next(_screenH / 25, _screenH / 5);
 
@@ -175,7 +182,7 @@ namespace ChaosVisualAudioSimulation
             IntPtr hdc = NativeMethods.GetDC(IntPtr.Zero);
             try
             {
-                int columns = _rnd.Next(8, 20);
+                int columns = _rnd.Next(8, 20) + (int)(_intensity * 20);
                 for (int i = 0; i < columns; i++)
                 {
                     int x = _rnd.Next(0, _screenW);
@@ -287,7 +294,7 @@ namespace ChaosVisualAudioSimulation
                 DrawRandomIcon(hdc, cur.X - 16, cur.Y - 16);
                 DrawRandomIcon(hdc, cur.X + _rnd.Next(-60, 61), cur.Y + _rnd.Next(-60, 61));
 
-                int extra = _rnd.Next(2, 6);
+                int extra = _rnd.Next(2, 6) + (int)(_intensity * 10);
                 for (int i = 0; i < extra; i++)
                 {
                     int x = _rnd.Next(0, _screenW - 32);
@@ -307,7 +314,7 @@ namespace ChaosVisualAudioSimulation
             IntPtr hdc = NativeMethods.GetDC(IntPtr.Zero);
             try
             {
-                int n = _rnd.Next(80, 220);
+                int n = _rnd.Next(80, 220) + (int)(_intensity * 300);
                 for (int i = 0; i < n; i++)
                 {
                     int x = _rnd.Next(0, _screenW - 32);

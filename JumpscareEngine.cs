@@ -32,6 +32,7 @@ namespace ChaosVisualAudioSimulation
 
         private Image? _scareImage;
         private bool _scaring;
+        private bool _done; // tek seferlik: scare bir kez oynatıldı mı?
         private DateTime _scareStarted;
         private DateTime _nextScare;
 
@@ -98,6 +99,8 @@ namespace ChaosVisualAudioSimulation
         // ==================================================================
         private void OnTick(object? sender, EventArgs e)
         {
+            if (_done) return; // jumpscare yalnızca BİR KEZ oynatılır
+
             DateTime now = DateTime.UtcNow;
 
             if (!_scaring)
@@ -127,12 +130,22 @@ namespace ChaosVisualAudioSimulation
         {
             double elapsedMs = (now - _scareStarted).TotalMilliseconds;
 
-            // 3-4 saniye doldu -> scare biter, bir sonraki için boşluk planla.
+            // Süre doldu -> scare biter.
             if (elapsedMs >= AppConfig.ScareDurationMs)
             {
                 _scaring = false;
-                int gap = _rnd.Next(AppConfig.ScareMinGapSeconds, AppConfig.ScareMaxGapSeconds + 1);
-                _nextScare = now.AddSeconds(gap);
+
+                if (AppConfig.ScareRepeat)
+                {
+                    // Tekrarlanabilir mod: bir sonraki için boşluk planla.
+                    int gap = _rnd.Next(AppConfig.ScareMinGapSeconds, AppConfig.ScareMaxGapSeconds + 1);
+                    _nextScare = now.AddSeconds(gap);
+                }
+                else
+                {
+                    // Varsayılan: BİR KEZ çık ve bir daha asla.
+                    _done = true;
+                }
                 return;
             }
 

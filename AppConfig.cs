@@ -34,6 +34,12 @@ namespace ChaosVisualAudioSimulation
         /// <summary>Jumpscare aktif mi?</summary>
         public const bool ScareEnabled = true;
 
+        /// <summary>
+        /// Jumpscare tekrar etsin mi? false = YALNIZCA BİR KEZ, aniden çıkar ve
+        /// bir daha gelmez (varsayılan ve önerilen). true = aralıklarla tekrarlar.
+        /// </summary>
+        public const bool ScareRepeat = false;
+
         /// <summary>Jumpscare anında çığlık benzeri ses çalınsın mı?</summary>
         public const bool ScareScream = true;
 
@@ -53,16 +59,16 @@ namespace ChaosVisualAudioSimulation
         // Kaos yoğunluğu / popup ayarları
         // ------------------------------------------------------------------
 
-        /// <summary>Görsel motorun tick aralığı (ms). Düşük = daha yoğun kaos.</summary>
-        public const int VisualIntervalMs = 30;
+        /// <summary>Görsel motorun tick aralığı (ms). Düşük = daha yoğun/akıcı kaos.</summary>
+        public const int VisualIntervalMs = 20;
 
         /// <summary>Ekranı dolduran sahte uyarı pencereleri aktif mi?</summary>
         public const bool PopupsEnabled = true;
 
-        /// <summary>Uyarı pencereleri açılma aralığı (ms).</summary>
-        public const int PopupIntervalMs = 2200;
+        /// <summary>Uyarı pencereleri açılma aralığı (ms). Düşük = daha hızlı fışkırır.</summary>
+        public const int PopupIntervalMs = 900;
 
         /// <summary>Ekranda aynı anda bulunabilecek maksimum uyarı penceresi.</summary>
-        public const int MaxPopups = 12;
+        public const int MaxPopups = 20;
     }
 }
