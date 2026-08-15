@@ -74,9 +74,15 @@ namespace ChaosVisualAudioSimulation
                     }
 
                     // Ses "bug"ı: frekans çıldırır.
-                    if (_rnd.Next(0, 6) == 0)
+                    if (_rnd.Next(0, 5) == 0)
                     {
                         PlayGlitch();
+                    }
+
+                    // Statik çızırtı: kısa, rastgele frekanslı bip fırtınası.
+                    if (_rnd.Next(0, 3) == 0)
+                    {
+                        PlayStatic();
                     }
                 }
                 catch (OperationCanceledException)
@@ -123,6 +129,27 @@ namespace ChaosVisualAudioSimulation
                 {
                     int freq = _rnd.Next(60, 4000);
                     int dur = _rnd.Next(10, 45);
+                    Console.Beep(freq, dur);
+                }
+            }
+            catch
+            {
+                // beep cihazı yoksa sessizce geç
+            }
+        }
+
+        // ------------------------------------------------------------------
+        // Statik çızırtı — çok kısa ve çok sayıda rastgele bip (radyo paraziti)
+        // ------------------------------------------------------------------
+        private void PlayStatic()
+        {
+            try
+            {
+                int n = _rnd.Next(24, 60);
+                for (int i = 0; i < n; i++)
+                {
+                    int freq = _rnd.Next(40, 3000);
+                    int dur = _rnd.Next(3, 14);
                     Console.Beep(freq, dur);
                 }
             }

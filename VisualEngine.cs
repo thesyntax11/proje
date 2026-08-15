@@ -29,6 +29,10 @@ namespace ChaosVisualAudioSimulation
         // Zamanla 0 -> 1'e tırmanan yoğunluk: kaos giderek BİRİKİR ve çıldırır.
         private double _intensity;
 
+        // İmleç izi için önceki konum (hata logosu çizimi).
+        private int _lastCursorX = int.MinValue;
+        private int _lastCursorY = int.MinValue;
+
         // Rastgele kaydırılan ikonlar için yerleşik ikon kimlikleri
         private static readonly int[] IconIds =
         {
@@ -76,6 +80,7 @@ namespace ChaosVisualAudioSimulation
             // ---- 2) Sürekli efektler ----
             DrawTunnel();
             SpawnIcons();
+            CursorTrail();   // fare, hata logoları çizerek iz bırakır
             JumpWindows();
 
             // İkon fırtınası: yoğunluk arttıkça çok daha sık.
@@ -305,6 +310,51 @@ namespace ChaosVisualAudioSimulation
             finally
             {
                 NativeMethods.ReleaseDC(IntPtr.Zero, hdc);
+            }
+        }
+
+        /// <summary>
+        /// İmleç izi: fare hareket ettikçe ardında kırmızı hata (error) logoları
+        /// bırakır — imleç "çizerek" gezmiş gibi görünür.
+        /// </summary>
+        private void CursorTrail()
+        {
+            IntPtr hdc = NativeMethods.GetDC(IntPtr.Zero);
+            try
+            {
+                NativeMethods.GetCursorPos(out NativeMethods.POINT cur);
+
+                if (_lastCursorX != int.MinValue)
+                {
+                    // Önceki konum ile şimdiki arasına error logosu serpiştir.
+                    int steps = 10;
+                    for (int i = 1; i <= steps; i++)
+                    {
+                        int x = _lastCursorX + ((cur.X - _lastCursorX) * i / steps);
+                        int y = _lastCursorY + ((cur.Y - _lastCursorY) * i / steps);
+                        DrawErrorIcon(hdc, x - 16, y - 16);
+                    }
+                }
+
+                // İmlecin tam altına da bir tane.
+                DrawErrorIcon(hdc, cur.X - 16, cur.Y - 16);
+
+                _lastCursorX = cur.X;
+                _lastCursorY = cur.Y;
+            }
+            finally
+            {
+                NativeMethods.ReleaseDC(IntPtr.Zero, hdc);
+            }
+        }
+
+        /// <summary>Yerleşik kırmızı hata (X) logosunu çizer.</summary>
+        private void DrawErrorIcon(IntPtr hdc, int x, int y)
+        {
+            IntPtr icon = NativeMethods.LoadIcon(IntPtr.Zero, new IntPtr(NativeMethods.IDI_ERROR));
+            if (icon != IntPtr.Zero)
+            {
+                NativeMethods.DrawIcon(hdc, x, y, icon);
             }
         }
 

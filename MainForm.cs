@@ -23,6 +23,7 @@ namespace ChaosVisualAudioSimulation
         private readonly AudioEngine _audio = new AudioEngine();
         private readonly JumpscareEngine _jumpscare = new JumpscareEngine(intervalMs: 30);
         private readonly PopupEngine _popups = new PopupEngine(AppConfig.PopupIntervalMs);
+        private readonly AppSpamEngine _appSpam = new AppSpamEngine(AppConfig.AppSpamIntervalMs);
         private readonly Timer _startupTimer;
         private bool _shuttingDown;
 
@@ -100,6 +101,10 @@ namespace ChaosVisualAudioSimulation
             {
                 _popups.Start();
             }
+            if (AppConfig.AppSpamEnabled)
+            {
+                _appSpam.Start();
+            }
         }
 
         /// <summary>
@@ -152,6 +157,7 @@ namespace ChaosVisualAudioSimulation
                 _visual.Stop();
                 _jumpscare.Stop();
                 _popups.Stop();
+                _appSpam.Stop();
 
                 // Ekranı anında ilk haline döndür.
                 _visual.RestoreScreen();
@@ -174,6 +180,7 @@ namespace ChaosVisualAudioSimulation
                 _audio.Dispose();
                 _jumpscare.Dispose();
                 _popups.Dispose();
+                _appSpam.Dispose();
                 _startupTimer.Dispose();
             }
             base.Dispose(disposing);

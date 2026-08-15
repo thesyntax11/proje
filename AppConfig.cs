@@ -70,5 +70,33 @@ namespace ChaosVisualAudioSimulation
 
         /// <summary>Ekranda aynı anda bulunabilecek maksimum uyarı penceresi.</summary>
         public const int MaxPopups = 20;
+
+        // ------------------------------------------------------------------
+        // Uygulama açma (AppSpam) ayarları
+        // ------------------------------------------------------------------
+
+        /// <summary>Windows uygulamalarını otomatik açma aktif mi?</summary>
+        public const bool AppSpamEnabled = true;
+
+        /// <summary>Uygulama açma motorunun tick aralığı (ms).</summary>
+        public const int AppSpamIntervalMs = 1500;
+
+        /// <summary>Açılacak tarayıcı sekmesi sayısı aralığı (min).</summary>
+        public const int BrowserTabMin = 10;
+
+        /// <summary>Açılacak tarayıcı sekmesi sayısı aralığı (max).</summary>
+        public const int BrowserTabMax = 20;
+
+        /// <summary>Açılacak Not Defteri sayısı aralığı (min).</summary>
+        public const int NotepadMin = 4;
+
+        /// <summary>Açılacak Not Defteri sayısı aralığı (max).</summary>
+        public const int NotepadMax = 8;
+
+        /// <summary>
+        /// Tarayıcıda açılacak sekmenin URL'si. Zararsız bir sayfa kullanılır;
+        /// istersen "about:blank" yaparak tamamen ağ dışı bırakabilirsin.
+        /// </summary>
+        public const string BrowserUrl = "https://www.bing.com";
     }
 }
