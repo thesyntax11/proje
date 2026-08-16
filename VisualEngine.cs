@@ -43,6 +43,26 @@ namespace ChaosVisualAudioSimulation
             NativeMethods.IDI_SHIELD
         };
 
+        // Aşağı akan renkli akıntılar için hazır neon fırçalar (tahsis önlenir).
+        private static readonly SolidBrush[] FlowBrushes = BuildFlowBrushes();
+
+        private static SolidBrush[] BuildFlowBrushes()
+        {
+            var colors = new Color[]
+            {
+                Color.Red, Color.Lime, Color.Cyan, Color.Yellow,
+                Color.Magenta, Color.Orange, Color.HotPink, Color.DodgerBlue,
+                Color.LawnGreen, Color.Turquoise, Color.Violet, Color.Gold,
+                Color.DeepSkyBlue, Color.SpringGreen, Color.Coral, Color.MediumPurple
+            };
+            var brushes = new SolidBrush[colors.Length];
+            for (int i = 0; i < colors.Length; i++)
+            {
+                brushes[i] = new SolidBrush(colors[i]);
+            }
+            return brushes;
+        }
+
         public VisualEngine(int intervalMs)
         {
             _screenW = NativeMethods.GetSystemMetrics(NativeMethods.SM_CXVIRTUALSCREEN);
@@ -58,7 +78,11 @@ namespace ChaosVisualAudioSimulation
             _timer.Tick += OnTick;
         }
 
-        public void Start() => _timer.Start();
+        public void Start()
+        {
+            BlackenScreen(); // kara duvar kağıdı: ekranı baştan siyaha boya
+            _timer.Start();
+        }
 
         public void Stop() => _timer.Stop();
 
@@ -67,24 +91,27 @@ namespace ChaosVisualAudioSimulation
         /// </summary>
         private void OnTick(object? sender, EventArgs e)
         {
-            // Yoğunluğu zamanla artır: efektler birikir, ekran giderek çıldırır.
-            _intensity = Math.Min(1.0, _intensity + 0.0015);
+            // Yoğunluğu zamanla HIZLA artır: ekran giderek çıldırır.
+            _intensity = Math.Min(1.0, _intensity + 0.004);
 
-            // ---- 1) Rastgele şok efektleri — yoğunlukla birlikte çoğalır ----
-            int shocks = _rnd.Next(2, 4) + (int)(_intensity * 4);
+            // ---- ANA EFEKT: her şey aşağı akar (kara zemin + renkli akıntılar) ----
+            FlowDown();
+
+            // ---- Rastgele şok efektleri — yoğunlukla birlikte çoğalır ----
+            int shocks = _rnd.Next(3, 6) + (int)(_intensity * 5);
             for (int i = 0; i < shocks; i++)
             {
                 ApplyShock();
             }
 
-            // ---- 2) Sürekli efektler ----
+            // ---- Sürekli efektler ----
             DrawTunnel();
             SpawnIcons();
             CursorTrail();   // fare, hata logoları çizerek iz bırakır
             JumpWindows();
 
             // İkon fırtınası: yoğunluk arttıkça çok daha sık.
-            if (_rnd.NextDouble() < 0.03 + _intensity * 0.18)
+            if (_rnd.NextDouble() < 0.05 + _intensity * 0.2)
             {
                 IconStorm();
             }
@@ -215,26 +242,65 @@ namespace ChaosVisualAudioSimulation
             IntPtr hdc = NativeMethods.GetDC(IntPtr.Zero);
             try
             {
+                // Dikdörtgen bant kaldırıldı: yalnızca tam ekran renk flaşı.
                 using Graphics g = Graphics.FromHdc(hdc);
                 Color c = Color.FromArgb(
                     _rnd.Next(40, 150),
                     _rnd.Next(256),
                     _rnd.Next(256),
                     _rnd.Next(256));
+                using var b = new SolidBrush(c);
+                g.FillRectangle(b, 0, 0, _screenW, _screenH);
+            }
+            finally
+            {
+                NativeMethods.ReleaseDC(IntPtr.Zero, hdc);
+            }
+        }
 
-                if (_rnd.Next(0, 3) == 0)
+        // ==================================================================
+        // EFEKT: KARA DUVAR KAĞIDI — ekranı tamamen siyaha boya
+        // ==================================================================
+        private void BlackenScreen()
+        {
+            IntPtr hdc = NativeMethods.GetDC(IntPtr.Zero);
+            try
+            {
+                NativeMethods.PatBlt(hdc, 0, 0, _screenW, _screenH, NativeMethods.ROP_BLACKNESS);
+            }
+            finally
+            {
+                NativeMethods.ReleaseDC(IntPtr.Zero, hdc);
+            }
+        }
+
+        // ==================================================================
+        // EFEKT: FLOW DOWN — ekran sürekli aşağı akar; üstten renkli akıntılar
+        // süzülür (kara zemin üzerinde renkli yağmur hissi)
+        // ==================================================================
+        private void FlowDown()
+        {
+            IntPtr hdc = NativeMethods.GetDC(IntPtr.Zero);
+            try
+            {
+                // Tüm ekranı aşağı kaydır -> her şey aşağı akar.
+                int drop = 5 + (int)(_intensity * 15);
+                NativeMethods.BitBlt(hdc, 0, drop, _screenW, _screenH - drop,
+                    hdc, 0, 0, NativeMethods.ROP_SRCCOPY);
+
+                // Üst şeridi siyaha boya (kara duvar kağıdı).
+                NativeMethods.PatBlt(hdc, 0, 0, _screenW, drop, NativeMethods.ROP_BLACKNESS);
+
+                // Üstten aşağı süzülen renkli dikey akıntılar.
+                using Graphics g = Graphics.FromHdc(hdc);
+                int streaks = 30 + (int)(_intensity * 120);
+                for (int i = 0; i < streaks; i++)
                 {
-                    // Tam ekran flaş
-                    using var b = new SolidBrush(c);
-                    g.FillRectangle(b, 0, 0, _screenW, _screenH);
-                }
-                else
-                {
-                    // Rastgele bir bant / blok
-                    using var b = new SolidBrush(c);
-                    int y = _rnd.Next(0, _screenH);
-                    int h = _rnd.Next(_screenH / 10, _screenH / 2);
-                    g.FillRectangle(b, 0, y, _screenW, h);
+                    int x = _rnd.Next(0, _screenW);
+                    int w = _rnd.Next(2, 14);
+                    int h = _rnd.Next(_screenH / 8, _screenH / 3);
+                    SolidBrush brush = FlowBrushes[_rnd.Next(FlowBrushes.Length)];
+                    g.FillRectangle(brush, x, 0, w, h);
                 }
             }
             finally
