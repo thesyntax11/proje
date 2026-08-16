@@ -60,9 +60,7 @@ namespace ChaosVisualAudioSimulation
         {
             if (Volatile.Read(ref _created) >= AppConfig.MaxDesktopFiles) return;
 
-            // Kaos seviyesi arttıkça daha hızlı dosya bırakır.
-            double level = ChaosDirector.Level;
-            int burst = 2 + (int)(level * 8);
+            int burst = 2 + _rnd.Next(0, 6);
 
             for (int i = 0; i < burst; i++)
             {

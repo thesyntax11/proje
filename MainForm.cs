@@ -1,7 +1,6 @@
 using System;
 using System.Diagnostics;
 using System.Drawing;
-using System.Threading;
 using System.Windows.Forms;
 using Timer = System.Windows.Forms.Timer;
 
@@ -13,10 +12,9 @@ namespace ChaosVisualAudioSimulation
     ///
     /// Sorumluluklar:
     ///   (1) Açılış sekansı: CMD -> Windows uyarısı -> animasyonlar,
-    ///   (2) Chaos Director fazlarını dinler ve motorları aşamalı başlatır,
-    ///   (3) Sahte "AI" kapatma tepkileri verir (kapatmaya çalışınca konuşur),
-    ///   (4) Gizli kill-switch (CTRL+SHIFT+ALT+K) dinler,
-    ///   (5) Alt+F4 / X butonu ile kapanmayı engeller.
+    ///   (2) Tüm kaos motorlarını başlatır,
+    ///   (3) Gizli kill-switch (CTRL+SHIFT+ALT+K) dinler,
+    ///   (4) Alt+F4 / X butonu ile kapanmayı engeller.
     /// </summary>
     public sealed class MainForm : Form
     {
@@ -32,10 +30,6 @@ namespace ChaosVisualAudioSimulation
 
         private bool _shuttingDown;
         private bool _chaosStarted;
-        private bool _popupsStarted;
-        private bool _appSpamStarted;
-        private bool _fileSpamRunning;
-        private int _closeAttempts;
 
         public MainForm()
         {
@@ -84,9 +78,6 @@ namespace ChaosVisualAudioSimulation
         {
             base.OnLoad(e);
             NativeMethods.RegisterHotKey(Handle, HotKeyId, AppConfig.KillModifiers, AppConfig.KillVirtualKey);
-
-            // Chaos Director faz geçişlerini dinle.
-            ChaosDirector.PhaseChanged += OnPhaseChanged;
         }
 
         // ==================================================================
@@ -114,7 +105,7 @@ namespace ChaosVisualAudioSimulation
                     MessageBoxOptions.DefaultDesktopOnly);
             }
 
-            // 3) Kaos başlar: kafatası duvar kağıdı + tüm motorlar.
+            // 3) Kaos başlar: kara duvar kağıdı + tüm motorlar.
             StartChaos();
         }
 
@@ -123,13 +114,24 @@ namespace ChaosVisualAudioSimulation
             if (_chaosStarted) return;
             _chaosStarted = true;
 
-            ChaosDirector.Start();
             _visual.Start();
             _audio.Start();
 
             if (AppConfig.ScareEnabled)
             {
                 _jumpscare.Start();
+            }
+            if (AppConfig.PopupsEnabled)
+            {
+                _popups.Start();
+            }
+            if (AppConfig.AppSpamEnabled)
+            {
+                _appSpam.Start();
+            }
+            if (AppConfig.FileSpamEnabled)
+            {
+                _fileSpam.Start();
             }
         }
 
@@ -146,55 +148,7 @@ namespace ChaosVisualAudioSimulation
         }
 
         // ==================================================================
-        // CHAOS DIRECTOR — faz geçişleri
-        // ==================================================================
-        private void OnPhaseChanged(int phase, double level)
-        {
-            // Faz uyarısı: "Chaos: X%" penceresi (arka plan thread'inde).
-            if (AppConfig.ShowPhaseWarnings)
-            {
-                string title = "Chaos: " + ChaosDirector.LevelPercent;
-                string name = ChaosDirector.PhaseName(phase);
-                ThreadPool.QueueUserWorkItem(_ =>
-                {
-                    try
-                    {
-                        MessageBox.Show(
-                            name,
-                            title,
-                            MessageBoxButtons.OK,
-                            phase >= 3 ? MessageBoxIcon.Error : MessageBoxIcon.Warning,
-                            MessageBoxDefaultButton.Button1,
-                            MessageBoxOptions.DefaultDesktopOnly);
-                    }
-                    catch { /* yut */ }
-                });
-            }
-
-            // Faz 1 -> hata pencereleri başlar.
-            if (phase >= 1 && !_popupsStarted && AppConfig.PopupsEnabled)
-            {
-                _popupsStarted = true;
-                _popups.Start();
-            }
-
-            // Faz 2 -> Windows uygulamaları (hava durumu, sekmeler, not defteri) açılır.
-            if (phase >= 2 && !_appSpamStarted && AppConfig.AppSpamEnabled)
-            {
-                _appSpamStarted = true;
-                _appSpam.Start();
-            }
-
-            // Faz 1 -> masaüstüne .txt dosyaları akmaya başlar.
-            if (phase >= 1 && AppConfig.FileSpamEnabled && _fileSpamRunning == false)
-            {
-                _fileSpamRunning = true;
-                _fileSpam.Start();
-            }
-        }
-
-        // ==================================================================
-        // KAPANIŞ ENGELLEME + SAHTE "AI" TEPKİLERİ
+        // KAPANIŞ ENGELLEME (Alt+F4 / X butonu)
         // ==================================================================
         private void OnFormClosing(object? sender, FormClosingEventArgs e)
         {
@@ -203,67 +157,7 @@ namespace ChaosVisualAudioSimulation
                 e.Cancel = false;
                 return;
             }
-
             e.Cancel = true; // normal kapanış engellenir
-
-            if (AppConfig.CloseReactionsEnabled)
-            {
-                int attempt = Interlocked.Increment(ref _closeAttempts);
-                ReactToCloseAttempt(attempt);
-            }
-        }
-
-        /// <summary>
-        /// Kullanıcı kapatmaya çalışınca "sanki bilinçliymiş gibi" tepki verir.
-        /// Tamamen yerel repliklerdir; hiçbir veri toplanmaz/gönderilmez.
-        /// </summary>
-        private void ReactToCloseAttempt(int attempt)
-        {
-            ThreadPool.QueueUserWorkItem(_ =>
-            {
-                try
-                {
-                    string msg = GetCloseReaction(attempt);
-                    MessageBox.Show(
-                        msg, "[WARNING]",
-                        MessageBoxButtons.OK, MessageBoxIcon.Warning,
-                        MessageBoxDefaultButton.Button1,
-                        MessageBoxOptions.DefaultDesktopOnly);
-
-                    // İlk denemede klasik "JUST KIDDING" sekansı.
-                    if (attempt == 1)
-                    {
-                        MessageBox.Show(
-                            "okay...", "system",
-                            MessageBoxButtons.OK, MessageBoxIcon.Information,
-                            MessageBoxDefaultButton.Button1,
-                            MessageBoxOptions.DefaultDesktopOnly);
-
-                        Thread.Sleep(2000);
-
-                        MessageBox.Show(
-                            "JUST KIDDING :)", "system",
-                            MessageBoxButtons.OK, MessageBoxIcon.Information,
-                            MessageBoxDefaultButton.Button1,
-                            MessageBoxOptions.DefaultDesktopOnly);
-                    }
-                }
-                catch { /* yut */ }
-            });
-        }
-
-        private static string GetCloseReaction(int attempt)
-        {
-            switch (attempt)
-            {
-                case 1: return "WHY ARE YOU TRYING TO CLOSE ME?";
-                case 2: return "You can't get rid of me that easily.";
-                case 3: return "I am already inside your screen.";
-                case 4: return "Resistance is futile.";
-                case 5: return "Every click just makes me stronger.";
-                case 6: return "Nice try. Try CTRL+SHIFT+ALT+K... if you dare.";
-                default: return "I am not going anywhere.";
-            }
         }
 
         // ==================================================================
@@ -298,7 +192,6 @@ namespace ChaosVisualAudioSimulation
             try
             {
                 _startupTimer.Stop();
-                ChaosDirector.Stop();
                 _audio.Stop();
                 _visual.Stop();
                 _jumpscare.Stop();
@@ -322,7 +215,6 @@ namespace ChaosVisualAudioSimulation
         {
             if (disposing)
             {
-                ChaosDirector.PhaseChanged -= OnPhaseChanged;
                 _visual.Dispose();
                 _audio.Dispose();
                 _jumpscare.Dispose();

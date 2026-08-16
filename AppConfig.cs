@@ -22,16 +22,6 @@ namespace ChaosVisualAudioSimulation
         public const uint KillVirtualKey = 0x4B; // 'K' tuşu
 
         // ------------------------------------------------------------------
-        // Chaos Director (fazlar / yükselen kaos)
-        // ------------------------------------------------------------------
-
-        /// <summary>Kaosun %100'e ulaşma süresi (saniye). Sonda baya ciddileşir.</summary>
-        public const int FullChaosSeconds = 240;
-
-        /// <summary>Faz geçişlerinde ekrana "Chaos: X%" uyarı penceresi açılsın mı?</summary>
-        public const bool ShowPhaseWarnings = true;
-
-        // ------------------------------------------------------------------
         // Açılış sekansı
         // ------------------------------------------------------------------
 
@@ -54,13 +44,6 @@ namespace ChaosVisualAudioSimulation
         /// (CMD + uyarı bu gecikmeden SONRA başlar.)
         /// </summary>
         public const int StartupDelaySeconds = 2;
-
-        // ------------------------------------------------------------------
-        // Sahte "AI" kapatma tepkileri
-        // ------------------------------------------------------------------
-
-        /// <summary>Kullanıcı kapatmaya çalışınca sahte "AI" tepkisi verilsin mi?</summary>
-        public const bool CloseReactionsEnabled = true;
 
         // ------------------------------------------------------------------
         // Jumpscare (korku patlaması) ayarları

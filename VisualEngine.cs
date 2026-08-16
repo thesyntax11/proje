@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.IO;
-using System.Reflection;
 using System.Windows.Forms;
 using Timer = System.Windows.Forms.Timer;
 
@@ -28,11 +26,8 @@ namespace ChaosVisualAudioSimulation
         private double _tunnelScale = 1.0;
         private int _tunnelDirection = -1;
 
-        // Güncel kaos seviyesi (ChaosDirector'dan her tick okunur).
+        // Zamanla 0 -> 1'e tırmanan yoğunluk: kaos giderek BİRİKİR ve çıldırır.
         private double _intensity;
-
-        // Arka plan duvar kağıdı: kafatası görseli (skull.png).
-        private Image? _skullImage;
 
         // İmleç izi için önceki konum (hata logosu çizimi).
         private int _lastCursorX = int.MinValue;
@@ -79,8 +74,6 @@ namespace ChaosVisualAudioSimulation
                 _screenH = primary.Height;
             }
 
-            LoadSkullImage();
-
             _timer = new Timer { Interval = intervalMs };
             _timer.Tick += OnTick;
         }
@@ -98,12 +91,11 @@ namespace ChaosVisualAudioSimulation
         /// </summary>
         private void OnTick(object? sender, EventArgs e)
         {
-            // Yoğunluğu Chaos Director'dan al: fazlar ilerledikçe her şey şiddetlenir.
-            _intensity = ChaosDirector.Level;
+            // Yoğunluğu zamanla artır: ekran giderek çıldırır.
+            _intensity = Math.Min(1.0, _intensity + 0.004);
 
-            // ---- ANA EFEKT: kafatası duvar kağıdı + aşağı akan renkli akıntılar ----
-            DrawBackground();
-            FlowStreaks();
+            // ---- ANA EFEKT: kara duvar kağıdı + aşağı akan renkli akıntılar ----
+            FlowDown();
 
             // ---- Rastgele şok efektleri — yoğunlukla birlikte çoğalır ----
             int shocks = _rnd.Next(3, 6) + (int)(_intensity * 5);
@@ -283,55 +275,23 @@ namespace ChaosVisualAudioSimulation
         }
 
         // ==================================================================
-        // EFEKT: FLOW DOWN — arka plan kafatası + aşağı akan renkli akıntılar
+        // EFEKT: FLOW DOWN — ekran sürekli aşağı akar; üstten renkli akıntılar
+        // süzülür (kara zemin üzerinde renkli yağmur hissi)
         // ==================================================================
-
-        /// <summary>
-        /// Kafatası duvar kağıdını ekrana çizer. Görsel yoksa kara zemin kalır.
-        /// Kaos ilerledikçe kafatası hafif zoom yaparak "yaklaşır".
-        /// </summary>
-        private void DrawBackground()
+        private void FlowDown()
         {
             IntPtr hdc = NativeMethods.GetDC(IntPtr.Zero);
             try
             {
-                if (_skullImage != null)
-                {
-                    using Graphics g = Graphics.FromHdc(hdc);
-                    g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.Low;
+                // Tüm ekranı aşağı kaydır -> her şey aşağı akar.
+                int drop = 5 + (int)(_intensity * 15);
+                NativeMethods.BitBlt(hdc, 0, drop, _screenW, _screenH - drop,
+                    hdc, 0, 0, NativeMethods.ROP_SRCCOPY);
 
-                    double zoom = 1.0 + _intensity * 0.5;
-                    int w = (int)(_screenW * zoom);
-                    int h = (int)(_screenH * zoom);
-                    int x = (_screenW - w) / 2;
-                    int y = (_screenH - h) / 2;
-                    g.DrawImage(_skullImage, x, y, w, h);
+                // Üst şeridi siyaha boya (kara duvar kağıdı).
+                NativeMethods.PatBlt(hdc, 0, 0, _screenW, drop, NativeMethods.ROP_BLACKNESS);
 
-                    // Kaos arttıkça üzerine yarı saydam kırmızı ton bindir.
-                    if (_intensity > 0.4)
-                    {
-                        int a = (int)((_intensity - 0.4) * 90);
-                        using var red = new SolidBrush(Color.FromArgb(a, 120, 0, 0));
-                        g.FillRectangle(red, 0, 0, _screenW, _screenH);
-                    }
-                }
-                else
-                {
-                    NativeMethods.PatBlt(hdc, 0, 0, _screenW, _screenH, NativeMethods.ROP_BLACKNESS);
-                }
-            }
-            finally
-            {
-                NativeMethods.ReleaseDC(IntPtr.Zero, hdc);
-            }
-        }
-
-        /// <summary>Üstten aşağı süzülen renkli neon dikey akıntılar.</summary>
-        private void FlowStreaks()
-        {
-            IntPtr hdc = NativeMethods.GetDC(IntPtr.Zero);
-            try
-            {
+                // Üstten aşağı süzülen renkli dikey akıntılar.
                 using Graphics g = Graphics.FromHdc(hdc);
                 int streaks = 30 + (int)(_intensity * 120);
                 for (int i = 0; i < streaks; i++)
@@ -346,35 +306,6 @@ namespace ChaosVisualAudioSimulation
             finally
             {
                 NativeMethods.ReleaseDC(IntPtr.Zero, hdc);
-            }
-        }
-
-        // ==================================================================
-        // KAFATASI DUVAR KAĞIDINI GÖMÜLÜ KAYNAKTAN YÜKLE (skull.png)
-        // ==================================================================
-        private void LoadSkullImage()
-        {
-            try
-            {
-                Assembly asm = Assembly.GetExecutingAssembly();
-                foreach (string name in asm.GetManifestResourceNames())
-                {
-                    if (!name.EndsWith("skull.png", StringComparison.OrdinalIgnoreCase))
-                        continue;
-
-                    using Stream s = asm.GetManifestResourceStream(name)!;
-                    using var ms = new MemoryStream();
-                    s.CopyTo(ms);
-                    ms.Position = 0;
-
-                    using var tmp = Image.FromStream(ms);
-                    _skullImage = new Bitmap(tmp);
-                    return;
-                }
-            }
-            catch
-            {
-                _skullImage = null; // yoksa kara zemin kalır
             }
         }
 
@@ -571,7 +502,6 @@ namespace ChaosVisualAudioSimulation
         {
             _timer.Tick -= OnTick;
             _timer.Dispose();
-            _skullImage?.Dispose();
         }
     }
 }
