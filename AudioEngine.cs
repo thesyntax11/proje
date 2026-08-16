@@ -44,11 +44,11 @@ namespace ChaosVisualAudioSimulation
 
         private void Loop(CancellationToken token)
         {
-            double intensity = 0.0;
             while (!token.IsCancellationRequested)
             {
+                // Tempo, Chaos Director'ın seviyesine göre hızlanır.
+                double intensity = ChaosDirector.Level;
                 int interval = (int)(MaxIntervalMs - (MaxIntervalMs - MinIntervalMs) * intensity);
-                intensity = Math.Min(1.0, intensity + 0.02);
 
                 try
                 {

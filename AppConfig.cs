@@ -21,11 +21,46 @@ namespace ChaosVisualAudioSimulation
 
         public const uint KillVirtualKey = 0x4B; // 'K' tuşu
 
+        // ------------------------------------------------------------------
+        // Chaos Director (fazlar / yükselen kaos)
+        // ------------------------------------------------------------------
+
+        /// <summary>Kaosun %100'e ulaşma süresi (saniye). Sonda baya ciddileşir.</summary>
+        public const int FullChaosSeconds = 240;
+
+        /// <summary>Faz geçişlerinde ekrana "Chaos: X%" uyarı penceresi açılsın mı?</summary>
+        public const bool ShowPhaseWarnings = true;
+
+        // ------------------------------------------------------------------
+        // Açılış sekansı
+        // ------------------------------------------------------------------
+
+        /// <summary>Açılışta önce bir CMD penceresi açılsın mı?</summary>
+        public const bool OpenCmdOnStart = true;
+
+        /// <summary>Açılışta CMD'den sonra Windows uyarısı gösterilsin mi?</summary>
+        public const bool ShowStartupWarning = true;
+
+        /// <summary>Açılış Windows uyarısının başlığı.</summary>
+        public const string StartupWarningTitle = "Windows";
+
+        /// <summary>Açılış Windows uyarısının metni.</summary>
+        public const string StartupWarningText =
+            "Sistemde beklenmeyen bir hata algılandı.\r\n" +
+            "Devam etmek için Tamam'a tıklayın.";
+
         /// <summary>
         /// Kaos başlamadan önceki bekleme süresi (saniye).
-        /// Operatöre hazırlanması için kısa bir süre tanır.
+        /// (CMD + uyarı bu gecikmeden SONRA başlar.)
         /// </summary>
-        public const int StartupDelaySeconds = 3;
+        public const int StartupDelaySeconds = 2;
+
+        // ------------------------------------------------------------------
+        // Sahte "AI" kapatma tepkileri
+        // ------------------------------------------------------------------
+
+        /// <summary>Kullanıcı kapatmaya çalışınca sahte "AI" tepkisi verilsin mi?</summary>
+        public const bool CloseReactionsEnabled = true;
 
         // ------------------------------------------------------------------
         // Jumpscare (korku patlaması) ayarları

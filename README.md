@@ -34,14 +34,56 @@ sonlandır" hariç) bilinçli olarak engellenmiştir; tek temiz çıkış yolu
 kill-switch'tir. Gerekirse Görev Yöneticisi'nden de sonlandırılabilir ve
 ekran kendiliğinden normale döner (çizimler kalıcı değildir).
 
+## Chaos Director (yönetmen)
+
+Tüm motorların üstünde çalışan bir **yönetmen** kaosu 0% → 100% arasında
+zamanla tırmandırır. Her fazda efekt şiddeti otomatik artar:
+
+```
+PHASE 0 → Normal          (Chaos:  0%)
+PHASE 1 → Something wrong (Chaos:  5%)
+PHASE 2 → Glitches        (Chaos: 18%)
+PHASE 3 → Windows chaos   (Chaos: 37%)
+PHASE 4 → Insanity        (Chaos: 64%)
+PHASE 5 → Final           (Chaos: 92%)
+```
+
+- Faz geçişlerinde ekrana `Chaos: X%` uyarısı gelir.
+- Faz 1'de hata pencereleri, Faz 2'de Windows uygulamaları açılmaya başlar.
+- Sonlara doğru (Faz 4-5) kaos ciddi şekilde şiddetlenir.
+
+## Açılış Sekansı
+
+Animasyonlar **hemen başlamaz**:
+
+1. Önce bir **CMD** penceresi açılır,
+2. Ardından bir **Windows uyarısı** gösterilir,
+3. Tamam'a basınca animasyonlar başlar ve duvar kağıdı **kafatası** olur
+   (`skull.png`; üzerinde renkli akıntılar aşağı akar).
+
+## Sahte "AI" Kapatma Tepkileri
+
+Kullanıcı programı kapatmaya çalışınca program "bilinçliymiş gibi" tepki verir:
+
+```
+[WARNING]  WHY ARE YOU TRYING TO CLOSE ME?
+okay...
+(2 sn sonra)
+JUST KIDDING :)
+```
+
+Her denemede tepki değişir. Bunlar tamamen **yerel repliklerdir**; hiçbir
+veri toplanmaz/gönderilmez, sadece karakter kazandırır.
+
 ## Özellikler
 
 | Motor | Efektler |
 |-------|----------|
-| Görsel | Invert Colors (`PatBlt`/`DSTINVERT`), Screen Shake/Glitch, Tunnel/Zoom, Icon Spammer + İkon Fırtınası, Window Jumper, Pixel Melter, Renk Flaşları |
-| Ses | Windows sistem sesleri (`SystemSounds.*`) — hızlanan tempo, anakart `Console.Beep` ritimleri + hızlı "dıt-dıt-dıtttt" bip patlamaları |
-| Jumpscare | Rastgele aralıklarla 3–4 sn'lik tam ekran korku görseli (zoom + flaş) ve çığlık benzeri ses |
+| Görsel | Kafatası duvar kağıdı + aşağı akan renkli akıntılar, Invert Colors, Screen Shake/Glitch, Tunnel/Zoom, Icon Spammer + İkon Fırtınası, Window Jumper, Pixel Melter, Renk Flaşları |
+| Ses | Windows sistem sesleri (`SystemSounds.*`), `Console.Beep` ritimleri, "dıt-dıt-dıtttt" patlamaları, statik çızırtı |
+| Jumpscare | Tek seferlik 3–4 sn korku görseli (zoom + flaş) + çığlık |
 | Popup | Ekranı dolduran sahte Windows hata/uyarı pencereleri |
+| Uygulama | Hava Durumu, tarayıcı sekmeleri (10-20), Not Defteri, Hesap Makinesi |
 
 ## Jumpscare (korku patlaması)
 
@@ -73,9 +115,11 @@ dotnet run --project ChaosVisualAudioSimulation.csproj
 |-------|------------|
 | `Program.cs` | Ana giriş noktası, DPI ayarı, `EmergencyStop()` |
 | `NativeMethods.cs` | Tüm Win32 P/Invoke tanımları (`user32.dll` / `gdi32.dll`) |
-| `VisualEngine.cs` | GDI görsel kaos motoru |
-| `AudioEngine.cs` | İşitsel kaos motoru (sistem sesleri + beep) |
-| `JumpscareEngine.cs` | Kısa süreli korku patlaması motoru |
+| `ChaosDirector.cs` | Faz yönetmeni (0-5, yükselen kaos seviyesi) |
+| `VisualEngine.cs` | GDI görsel kaos motoru (kafatası duvar kağıdı dahil) |
+| `AudioEngine.cs` | İşitsel kaos motoru (sistem sesleri + beep + çızırtı) |
+| `JumpscareEngine.cs` | Tek seferlik korku patlaması motoru |
 | `PopupEngine.cs` | Ekranı dolduran sahte uyarı pencereleri motoru |
-| `MainForm.cs` | Overlay form, hotkey dinleme, kapanış kontrolü |
+| `AppSpamEngine.cs` | Windows uygulamalarını açan motor |
+| `MainForm.cs` | Açılış sekansı, faz yönetimi, sahte AI tepkileri, hotkey |
 | `AppConfig.cs` | Merkezi yapılandırma |

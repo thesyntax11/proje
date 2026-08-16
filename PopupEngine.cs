@@ -69,8 +69,9 @@ namespace ChaosVisualAudioSimulation
 
         private void OnTick(object? sender, EventArgs e)
         {
-            // Hatalar fışkırsın: her tick'te 1-3 pencere birden (sınırı koruyarak).
-            int burst = _rnd.Next(1, 4);
+            // Hatalar fışkırsın: kaos seviyesi arttıkça daha çok pencere birden.
+            double level = ChaosDirector.Level;
+            int burst = _rnd.Next(1, 4) + (int)(level * 3);
             for (int i = 0; i < burst; i++)
             {
                 if (Volatile.Read(ref _active) >= AppConfig.MaxPopups) return;

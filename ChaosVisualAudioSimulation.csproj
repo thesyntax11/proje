@@ -7,6 +7,8 @@
     <EmbeddedResource Include="scare.png" Condition="Exists('scare.png')" />
     <EmbeddedResource Include="scare.jpg" Condition="Exists('scare.jpg')" />
     <EmbeddedResource Include="scare.jpeg" Condition="Exists('scare.jpeg')" />
+    <!-- Kafatası duvar kağıdı (skull.png) — VisualEngine yükler. -->
+    <EmbeddedResource Include="skull.png" Condition="Exists('skull.png')" />
   </ItemGroup>
 
   <PropertyGroup>
