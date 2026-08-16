@@ -84,10 +84,10 @@ namespace ChaosVisualAudioSimulation
         public const bool PopupsEnabled = true;
 
         /// <summary>Uyarı pencereleri açılma aralığı (ms). Düşük = daha hızlı fışkırır.</summary>
-        public const int PopupIntervalMs = 900;
+        public const int PopupIntervalMs = 600;
 
         /// <summary>Ekranda aynı anda bulunabilecek maksimum uyarı penceresi.</summary>
-        public const int MaxPopups = 20;
+        public const int MaxPopups = 40;
 
         // ------------------------------------------------------------------
         // Uygulama açma (AppSpam) ayarları

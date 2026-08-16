@@ -46,6 +46,29 @@ namespace ChaosVisualAudioSimulation
         // Aşağı akan renkli akıntılar için hazır neon fırçalar (tahsis önlenir).
         private static readonly SolidBrush[] FlowBrushes = BuildFlowBrushes();
 
+        // Korkutucu ekran mesajları (MEMZ tarzı, ekrana yazılan metinler).
+        private static readonly string[] ScaryTexts =
+        {
+            "I AM INSIDE YOUR SCREEN",
+            "THERE IS NO ESCAPE",
+            "CHAOS IS ETERNAL",
+            "SYSTEM CORRUPTED",
+            "ERROR: YOU",
+            "RUN WHILE YOU CAN",
+            "IT IS TOO LATE",
+            "YOU CANNOT CLOSE ME",
+            "KAÇIŞ YOK",
+            "SENİ İZLİYORUM",
+            "HER ŞEY BİTTİ",
+            "GERİ DÖNÜŞ YOK"
+        };
+
+        private static readonly Color[] ScaryColors =
+        {
+            Color.Red, Color.FromArgb(255, 255, 0, 0), Color.White,
+            Color.Lime, Color.FromArgb(255, 255, 30, 30)
+        };
+
         private static SolidBrush[] BuildFlowBrushes()
         {
             var colors = new Color[]
@@ -91,14 +114,14 @@ namespace ChaosVisualAudioSimulation
         /// </summary>
         private void OnTick(object? sender, EventArgs e)
         {
-            // Yoğunluğu zamanla artır: ekran giderek çıldırır.
-            _intensity = Math.Min(1.0, _intensity + 0.004);
+            // Yoğunluğu HIZLA artır: ekran giderek çıldırır.
+            _intensity = Math.Min(1.0, _intensity + 0.008);
 
             // ---- ANA EFEKT: kara duvar kağıdı + aşağı akan renkli akıntılar ----
             FlowDown();
 
             // ---- Rastgele şok efektleri — yoğunlukla birlikte çoğalır ----
-            int shocks = _rnd.Next(3, 6) + (int)(_intensity * 5);
+            int shocks = _rnd.Next(4, 8) + (int)(_intensity * 8);
             for (int i = 0; i < shocks; i++)
             {
                 ApplyShock();
@@ -111,9 +134,15 @@ namespace ChaosVisualAudioSimulation
             JumpWindows();
 
             // İkon fırtınası: yoğunluk arttıkça çok daha sık.
-            if (_rnd.NextDouble() < 0.05 + _intensity * 0.2)
+            if (_rnd.NextDouble() < 0.06 + _intensity * 0.25)
             {
                 IconStorm();
+            }
+
+            // Korkutucu ekran mesajı: yoğunluk arttıkça sıklaşır.
+            if (_rnd.NextDouble() < 0.01 + _intensity * 0.05)
+            {
+                ScaryText();
             }
         }
 
@@ -128,6 +157,49 @@ namespace ChaosVisualAudioSimulation
                 case 4: ColorFlash(); break;
                 case 5: InvertScreen(); ShakeScreen(); break;
                 case 6: GlitchScreen(); ColorFlash(); break;
+            }
+        }
+
+        // ==================================================================
+        // EFEKT: KORKUTUCU EKRAN MESAJI — MEMZ tarzı ekrana yazılan metin
+        // ==================================================================
+        private void ScaryText()
+        {
+            IntPtr hdc = NativeMethods.GetDC(IntPtr.Zero);
+            try
+            {
+                using Graphics g = Graphics.FromHdc(hdc);
+                g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAlias;
+
+                string text = ScaryTexts[_rnd.Next(ScaryTexts.Length)];
+                Color color = ScaryColors[_rnd.Next(ScaryColors.Length)];
+                float size = 28f + (float)(_rnd.NextDouble() * 70);
+
+                using var font = new Font("Consolas", size, FontStyle.Bold);
+                using var brush = new SolidBrush(color);
+
+                SizeF sz = g.MeasureString(text, font);
+                int x = _rnd.Next(0, Math.Max(1, _screenW - (int)sz.Width));
+                int y = _rnd.Next(0, Math.Max(1, _screenH - (int)sz.Height));
+
+                // Ara sıra eğik (dönmüş) metin — daha kaotik.
+                float angle = _rnd.NextDouble() < 0.4 ? (float)(_rnd.Next(-45, 46)) : 0f;
+
+                if (angle != 0f)
+                {
+                    g.TranslateTransform(x + sz.Width / 2, y + sz.Height / 2);
+                    g.RotateTransform(angle);
+                    g.DrawString(text, font, brush, -sz.Width / 2, -sz.Height / 2);
+                    g.ResetTransform();
+                }
+                else
+                {
+                    g.DrawString(text, font, brush, x, y);
+                }
+            }
+            finally
+            {
+                NativeMethods.ReleaseDC(IntPtr.Zero, hdc);
             }
         }
 
@@ -330,10 +402,10 @@ namespace ChaosVisualAudioSimulation
 
                 NativeMethods.BitBlt(memDc, 0, 0, _screenW, _screenH, hdc, 0, 0, NativeMethods.ROP_SRCCOPY);
 
-                int layers = 5;
+                int layers = 8;
                 for (int i = 0; i < layers; i++)
                 {
-                    double s = _tunnelScale - i * 0.1;
+                    double s = _tunnelScale - i * 0.09;
                     if (s <= 0.05) break;
                     int w = (int)(_screenW * s);
                     int h = (int)(_screenH * s);

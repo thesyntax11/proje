@@ -6,10 +6,9 @@ using Timer = System.Windows.Forms.Timer;
 namespace ChaosVisualAudioSimulation
 {
     /// <summary>
-    /// UYARI PENÇERESİ MOTORU
-    /// Ekranı sahte Windows hata/uyarı MessageBox pencereleriyle doldurur.
-    /// Her pencere ayrı bir arka plan thread'inde açılır (UI thread kilitlenmez);
-    /// aktif pencere sayısı sınırlandırılarak sistem sağlığı korunur.
+    /// UYARI PENÇERESİ MOTORU — MEMZ tarzı, giderek agresifleşen sürüm.
+    /// Ekranı iç içe binen sahte Windows hata/uyarı pencereleriyle doldurur;
+    /// zamanla yoğunluk arttıkça daha çok ve daha korkutucu pencereler açılır.
     ///
     /// GÜVENLİK: Bu pencereler tamamen sanal/harmless'tır. Hiçbir dosya,
     /// kayıt defteri, ağ veya sistem ayarına dokunulmaz. Tek tek kapatılabilir
@@ -19,10 +18,12 @@ namespace ChaosVisualAudioSimulation
     {
         private readonly Timer _timer;
         private readonly Random _rnd = new Random();
-        private int _active; // thread-safe sayaç
+        private int _active;   // thread-safe sayaç
+        private double _intensity; // zamanla 0 -> 1
 
         private static readonly MessageBoxIcon[] Icons =
         {
+            MessageBoxIcon.Error,
             MessageBoxIcon.Error,
             MessageBoxIcon.Error,
             MessageBoxIcon.Warning,
@@ -35,26 +36,37 @@ namespace ChaosVisualAudioSimulation
         {
             "Kritik Sistem Hatası",
             "DİKKAT!",
-            "Uyarı",
-            "Bellek Yetersiz",
-            "Ekran sürücüsü durdu",
             "SYSTEM_FAULT",
             "FATAL ERROR",
-            "ÖNEMLİ!"
+            "KERNEL PANIC",
+            "MEMORY DUMP",
+            "ÖNEMLİ!",
+            "SON UYARI",
+            "GÖREV BAŞARISIZ",
+            "ÇIKIŞ YOK"
         };
 
+        // Korkutucu mesajlar: başta hafif, ilerledikçe ürkütücü.
         private static readonly string[] Messages =
         {
             "Sistem çöküyor... Lütfen panik yapmayın. 😱",
             "Ekran kontrolü kaybedildi!",
-            "Grafik kartı aşırı ısındı (şaka şaka).",
-            "Bellek yetersiz: yeterince kaos var!",
             "Kritik hata: çok fazla hata penceresi açıldı.",
             "Mavi ekran yaklaşıyor... şaka, hiçbir şey olmuyor.",
-            "Fare imleci nerede? Aramıyoruz, sadece şov yapıyoruz.",
-            "Bu bir tatbikattır. Gerçek bir hata değildir.",
             "Piksel eritici devrede!",
-            "Kaos seviyesi: MAKSİMUM"
+            "Kaos seviyesi: MAKSİMUM",
+
+            // Korkutucu / agresif katman
+            "KAÇIŞ YOK.",
+            "I AM INSIDE YOUR SCREEN",
+            "SİSTEMİN KONTROLÜ BİZDE",
+            "HER ŞEY KAYBEDİLDİ",
+            "BUNU SEN BAŞLATTIN",
+            "GERİ DÖNÜŞ YOK",
+            "DOSYALARIN... ŞAKA. HAYIR, CİDDİ.",
+            "SENİ İZLİYORUM",
+            "ÇIKIŞ YOK, SADECE KAOS VAR",
+            "BENİ KAPATAMAZSIN"
         };
 
         public PopupEngine(int intervalMs)
@@ -69,8 +81,10 @@ namespace ChaosVisualAudioSimulation
 
         private void OnTick(object? sender, EventArgs e)
         {
-            // Hatalar fışkırsın: her tick'te 1-3 pencere birden (sınırı koruyarak).
-            int burst = _rnd.Next(1, 4);
+            // Yoğunluk zamanla artar -> iç içe daha çok pencere.
+            _intensity = Math.Min(1.0, _intensity + 0.02);
+
+            int burst = _rnd.Next(1, 4) + (int)(_intensity * 6);
             for (int i = 0; i < burst; i++)
             {
                 if (Volatile.Read(ref _active) >= AppConfig.MaxPopups) return;
@@ -91,7 +105,19 @@ namespace ChaosVisualAudioSimulation
             {
                 var icon = Icons[_rnd.Next(Icons.Length)];
                 string title = Titles[_rnd.Next(Titles.Length)];
-                string msg = Messages[_rnd.Next(Messages.Length)];
+
+                // Yoğunluk arttıkça korkutucu mesajların seçilme olasılığı artar.
+                bool scary = _rnd.NextDouble() < _intensity;
+                int idx;
+                if (scary)
+                {
+                    idx = 6 + _rnd.Next(Messages.Length - 6); // korkutucu bölüm
+                }
+                else
+                {
+                    idx = _rnd.Next(6); // hafif bölüm
+                }
+                string msg = Messages[idx];
 
                 MessageBox.Show(
                     msg, title,
