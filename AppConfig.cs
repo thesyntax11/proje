@@ -133,5 +133,18 @@ namespace ChaosVisualAudioSimulation
         /// istersen "about:blank" yaparak tamamen ağ dışı bırakabilirsin.
         /// </summary>
         public const string BrowserUrl = "https://www.bing.com";
+
+        // ------------------------------------------------------------------
+        // Masaüstü dosya spam ayarları
+        // ------------------------------------------------------------------
+
+        /// <summary>Masaüstüne .txt dosyası bırakma aktif mi?</summary>
+        public const bool FileSpamEnabled = true;
+
+        /// <summary>Dosya spam motorunun tick aralığı (ms).</summary>
+        public const int FileSpamIntervalMs = 600;
+
+        /// <summary>Masaüstüne bırakılacak maksimum .txt dosyası (ekranı doldurur).</summary>
+        public const int MaxDesktopFiles = 400;
     }
 }

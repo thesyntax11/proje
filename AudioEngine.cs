@@ -6,13 +6,15 @@ using System.Threading.Tasks;
 namespace ChaosVisualAudioSimulation
 {
     /// <summary>
-    /// SES MOTORU — yoğunlaştırılmış sürüm.
-    /// İki katmanlı işitsel kaos üretir:
-    ///   1) Windows sistem sesleri (SystemSounds.*) — giderek hızlanan tempo
-    ///   2) Anakart beep sesleri (Console.Beep) — kaotik frekans ve hızlı
-    ///      "dıt-dıt-dıtttt" ritim patlamaları.
+    /// SES MOTORU — MAKSİMUM yoğunluk sürümü.
+    /// Çok katmanlı işitsel kaos üretir:
+    ///   1) Windows sistem sesleri (SystemSounds.*) — çoklu katman, hızlanan tempo
+    ///   2) Anakart beep (Console.Beep) — kaotik frekans, bass, glitch, çızırtı
+    ///   3) "Mikrofon patlatma" hissi — ani yükselen tiz + geri besleme taklidi
     ///
-    /// GÜVENLİK: Tamamen yereldir; hiçbir dosya/ağ/registry erişimi yoktur.
+    /// GÜVENLİK: Tamamen yereldir; ağ/veri erişimi yoktur. Sistem ses ayarını
+    /// (master volume) DEĞİŞTİRMEZ — yalnızca çok yoğun ses üretir. Uygulama
+    /// kapanınca sesler de kesilir.
     /// </summary>
     internal sealed class AudioEngine : IDisposable
     {
@@ -20,9 +22,9 @@ namespace ChaosVisualAudioSimulation
         private Task? _loopTask;
         private readonly Random _rnd = new Random();
 
-        // Tempo, 240ms'den 25ms'ye kadar hızlanır.
-        private const int MinIntervalMs = 25;
-        private const int MaxIntervalMs = 240;
+        // Tempo, 180ms'den 8ms'ye kadar hızlanır (sürekli ses hissi).
+        private const int MinIntervalMs = 8;
+        private const int MaxIntervalMs = 180;
 
         public void Start()
         {
@@ -54,36 +56,28 @@ namespace ChaosVisualAudioSimulation
                 {
                     if (token.WaitHandle.WaitOne(interval)) break;
 
-                    // "dıng / dınnn" sistem sesleri — çoğu zaman çift katmanlı.
+                    // Sistem sesleri: çok katmanlı (üst üste binen "dıng/dınnn").
                     PlayRandomSystemSound();
-                    if (_rnd.Next(0, 3) == 0)
-                    {
-                        PlayRandomSystemSound();
-                    }
+                    if (_rnd.Next(0, 2) == 0) PlayRandomSystemSound();
+                    if (intensity > 0.5 && _rnd.Next(0, 2) == 0) PlayRandomSystemSound();
 
                     // Beep neredeyse her dilimde.
-                    if (_rnd.Next(0, 3) != 0)
-                    {
-                        PlayRandomBeep();
-                    }
+                    if (_rnd.Next(0, 3) != 0) PlayRandomBeep();
 
-                    // Hızlı bip patlaması (dıt-dıt-dıtttt).
-                    if (_rnd.Next(0, 4) == 0)
-                    {
-                        PlayBeepBurst();
-                    }
+                    // Bass: düşük frekanslı derin uğultu.
+                    if (_rnd.Next(0, 3) == 0) PlayBass();
 
-                    // Ses "bug"ı: frekans çıldırır.
-                    if (_rnd.Next(0, 5) == 0)
-                    {
-                        PlayGlitch();
-                    }
+                    // Hızlı bip patlaması.
+                    if (_rnd.Next(0, 4) == 0) PlayBeepBurst();
 
-                    // Statik çızırtı: kısa, rastgele frekanslı bip fırtınası.
-                    if (_rnd.Next(0, 3) == 0)
-                    {
-                        PlayStatic();
-                    }
+                    // Frekans çıldırması.
+                    if (_rnd.Next(0, 4) == 0) PlayGlitch();
+
+                    // Statik çızırtı — yoğun.
+                    if (_rnd.Next(0, 2) == 0) PlayStatic();
+
+                    // "Mikrofon patlatma" hissi: ani tiz + geri besleme.
+                    if (_rnd.Next(0, 4) == 0) PlayFeedback();
                 }
                 catch (OperationCanceledException)
                 {
@@ -112,9 +106,50 @@ namespace ChaosVisualAudioSimulation
         // ------------------------------------------------------------------
         private void PlayRandomBeep()
         {
-            int frequency = _rnd.Next(150, 3500);
-            int duration = _rnd.Next(20, 200);
-            Console.Beep(frequency, duration);
+            try
+            {
+                int frequency = _rnd.Next(150, 4000);
+                int duration = _rnd.Next(15, 180);
+                Console.Beep(frequency, duration);
+            }
+            catch { /* beep cihazı yok */ }
+        }
+
+        // ------------------------------------------------------------------
+        // Bass — düşük frekanslı derin uğultu (subwoofer hissi)
+        // ------------------------------------------------------------------
+        private void PlayBass()
+        {
+            try
+            {
+                int frequency = _rnd.Next(40, 160);
+                int duration = _rnd.Next(60, 250);
+                Console.Beep(frequency, duration);
+            }
+            catch { /* beep cihazı yok */ }
+        }
+
+        // ------------------------------------------------------------------
+        // "Mikrofon patlatma" / geri besleme — ani yükselen tiz dalgalanması
+        // ------------------------------------------------------------------
+        private void PlayFeedback()
+        {
+            try
+            {
+                // Ani yüksek tiz (patlama).
+                Console.Beep(_rnd.Next(2200, 3800), _rnd.Next(60, 140));
+
+                // Ardından düzensiz geri besleme dalgalanması.
+                int n = _rnd.Next(5, 12);
+                int f = _rnd.Next(1800, 3200);
+                for (int i = 0; i < n; i++)
+                {
+                    f += _rnd.Next(-400, 400);
+                    f = Math.Clamp(f, 800, 4000);
+                    Console.Beep(f, _rnd.Next(20, 60));
+                }
+            }
+            catch { /* beep cihazı yok */ }
         }
 
         // ------------------------------------------------------------------
@@ -124,39 +159,33 @@ namespace ChaosVisualAudioSimulation
         {
             try
             {
-                int n = _rnd.Next(6, 16);
+                int n = _rnd.Next(8, 20);
                 for (int i = 0; i < n; i++)
                 {
-                    int freq = _rnd.Next(60, 4000);
-                    int dur = _rnd.Next(10, 45);
+                    int freq = _rnd.Next(40, 4000);
+                    int dur = _rnd.Next(8, 40);
                     Console.Beep(freq, dur);
                 }
             }
-            catch
-            {
-                // beep cihazı yoksa sessizce geç
-            }
+            catch { /* beep cihazı yok */ }
         }
 
         // ------------------------------------------------------------------
-        // Statik çızırtı — çok kısa ve çok sayıda rastgele bip (radyo paraziti)
+        // Statik çızırtı — yoğun, kısa rastgele bip fırtınası
         // ------------------------------------------------------------------
         private void PlayStatic()
         {
             try
             {
-                int n = _rnd.Next(24, 60);
+                int n = _rnd.Next(40, 90);
                 for (int i = 0; i < n; i++)
                 {
-                    int freq = _rnd.Next(40, 3000);
-                    int dur = _rnd.Next(3, 14);
+                    int freq = _rnd.Next(30, 3500);
+                    int dur = _rnd.Next(2, 12);
                     Console.Beep(freq, dur);
                 }
             }
-            catch
-            {
-                // beep cihazı yoksa sessizce geç
-            }
+            catch { /* beep cihazı yok */ }
         }
 
         // ------------------------------------------------------------------
@@ -166,19 +195,16 @@ namespace ChaosVisualAudioSimulation
         {
             try
             {
-                int count = _rnd.Next(3, 9);
+                int count = _rnd.Next(4, 12);
                 int baseFreq = _rnd.Next(400, 1800);
                 for (int i = 0; i < count; i++)
                 {
-                    int freq = baseFreq + _rnd.Next(-200, 400);
-                    int dur = _rnd.Next(15, 70);
+                    int freq = baseFreq + _rnd.Next(-300, 500);
+                    int dur = _rnd.Next(12, 60);
                     Console.Beep(freq, dur);
                 }
             }
-            catch
-            {
-                // beep cihazı yoksa sessizce geç
-            }
+            catch { /* beep cihazı yok */ }
         }
 
         public void Dispose() => Stop();

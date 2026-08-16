@@ -18,6 +18,10 @@ yayınları ve sanal makine görsel performans testleri için tasarlanmıştır.
   MBR/Boot müdahalesi veya System32 erişimi yapılmaz.
 - **Temizlenebilir yapı:** Uygulama durdurulduğunda ekran
   `InvalidateRect` / `RedrawWindow` ile anında ilk haline döner.
+- **Masaüstü .txt spam:** Uygulama, Masaüstüne **yalnızca yeni, zararsız ve
+  silinebilir `.txt` dosyaları** bırakır (hiçbir dosyayı silmez/değiştirmez).
+  İstersen hepsini seçip silebilirsin; `AppConfig.FileSpamEnabled` ile
+  kapatılabilir.
 
 ## Gizli Acil Kapanış (Kill-Switch)
 
@@ -80,10 +84,11 @@ veri toplanmaz/gönderilmez, sadece karakter kazandırır.
 | Motor | Efektler |
 |-------|----------|
 | Görsel | Kafatası duvar kağıdı + aşağı akan renkli akıntılar, Invert Colors, Screen Shake/Glitch, Tunnel/Zoom, Icon Spammer + İkon Fırtınası, Window Jumper, Pixel Melter, Renk Flaşları |
-| Ses | Windows sistem sesleri (`SystemSounds.*`), `Console.Beep` ritimleri, "dıt-dıt-dıtttt" patlamaları, statik çızırtı |
+| Ses | Windows sistem sesleri (`SystemSounds.*`) çok katmanlı, `Console.Beep` bass/glitch/statik çızırtı, "mikrofon patlatma" geri beslemesi |
 | Jumpscare | Tek seferlik 3–4 sn korku görseli (zoom + flaş) + çığlık |
 | Popup | Ekranı dolduran sahte Windows hata/uyarı pencereleri |
 | Uygulama | Hava Durumu, tarayıcı sekmeleri (10-20), Not Defteri, Hesap Makinesi |
+| Dosya | Masaüstüne yüzlerce zararsız .txt dosyası (ekranı doldurur) |
 
 ## Jumpscare (korku patlaması)
 
@@ -121,5 +126,6 @@ dotnet run --project ChaosVisualAudioSimulation.csproj
 | `JumpscareEngine.cs` | Tek seferlik korku patlaması motoru |
 | `PopupEngine.cs` | Ekranı dolduran sahte uyarı pencereleri motoru |
 | `AppSpamEngine.cs` | Windows uygulamalarını açan motor |
+| `DesktopFileSpamEngine.cs` | Masaüstüne .txt dosyası bırakan motor |
 | `MainForm.cs` | Açılış sekansı, faz yönetimi, sahte AI tepkileri, hotkey |
 | `AppConfig.cs` | Merkezi yapılandırma |

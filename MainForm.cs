@@ -27,12 +27,14 @@ namespace ChaosVisualAudioSimulation
         private readonly JumpscareEngine _jumpscare = new JumpscareEngine(intervalMs: 30);
         private readonly PopupEngine _popups = new PopupEngine(AppConfig.PopupIntervalMs);
         private readonly AppSpamEngine _appSpam = new AppSpamEngine(AppConfig.AppSpamIntervalMs);
+        private readonly DesktopFileSpamEngine _fileSpam = new DesktopFileSpamEngine(AppConfig.FileSpamIntervalMs);
         private readonly Timer _startupTimer;
 
         private bool _shuttingDown;
         private bool _chaosStarted;
         private bool _popupsStarted;
         private bool _appSpamStarted;
+        private bool _fileSpamRunning;
         private int _closeAttempts;
 
         public MainForm()
@@ -182,6 +184,13 @@ namespace ChaosVisualAudioSimulation
                 _appSpamStarted = true;
                 _appSpam.Start();
             }
+
+            // Faz 1 -> masaüstüne .txt dosyaları akmaya başlar.
+            if (phase >= 1 && AppConfig.FileSpamEnabled && _fileSpamRunning == false)
+            {
+                _fileSpamRunning = true;
+                _fileSpam.Start();
+            }
         }
 
         // ==================================================================
@@ -295,6 +304,7 @@ namespace ChaosVisualAudioSimulation
                 _jumpscare.Stop();
                 _popups.Stop();
                 _appSpam.Stop();
+                _fileSpam.Stop();
 
                 _visual.RestoreScreen();
 
@@ -318,6 +328,7 @@ namespace ChaosVisualAudioSimulation
                 _jumpscare.Dispose();
                 _popups.Dispose();
                 _appSpam.Dispose();
+                _fileSpam.Dispose();
                 _startupTimer.Dispose();
             }
             base.Dispose(disposing);
